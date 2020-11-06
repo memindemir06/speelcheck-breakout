@@ -122,3 +122,59 @@ def processWords(words):
             wordList.append(temp)
     wordList = list(filter(None, wordList))
     return wordList
+
+def spellcheck(wordList):
+    """
+    Spellcheck the given list via SequenceMatcher and return the list with summary statistics
+    """
+    numOfWords = len(wordList)
+    correctCount = 0
+    incorrectCount = 0
+    addedToDictionaryCount = 0
+    changedWordCount = 0
+    for word in wordList:
+        suggestion = ("", 0)   # Current suggestion for incorrect word
+        processedInput.append(word)
+        matchCheck = False
+        with open("EnglishWords.txt") as file:
+            for line in file:
+                line = line.strip()
+                score = SequenceMatcher(None, line, word).ratio()
+                if (score == 1.0):    # If the word is spelt correctly
+                    suggestion = ("", 0)
+                    correctCount += 1
+                    matchCheck = True
+                    break
+                elif (score > 0.6 and score > suggestion[1]):
+                    # Looking for the best suggestion although it does not give the desired output most of the time :D
+                    suggestion = (line, score)
+                else:
+                    pass
+        if (matchCheck == False):     # If the word is spelt incorrectly
+            printer(("You incorrectly spelled '" + word + "'"), "text")
+            printer("Please select what you want to do with it:", "text")
+            decision = get1to4Input()
+            if (decision == 1):
+                incorrectCount += 1
+            if (decision == 2):
+                processedInput[len(processedInput)-1] = "?" + word + "?"
+                incorrectCount += 1
+            if (decision == 3):
+                addToDictionary(word)
+                addedToDictionaryCount += 1
+            if (decision == 4):
+                if (suggestion[0] == ""):
+                    printer("No suggestion found.", "text")
+                else:
+                    printer(
+                        ("Did you mean '" + suggestion[0] + "' instead of '" + word + "'"), "text")
+                    answer = getYesNoInput()
+                    if (answer == "y"):
+                        processedInput[len(processedInput)-1] = suggestion[0]
+                        changedWordCount += 1
+                    elif (answer == "n"):
+                        incorrectCount += 1
+                    else:
+                        pass
+
+    return [numOfWords, correctCount, incorrectCount, addedToDictionaryCount, changedWordCount]
