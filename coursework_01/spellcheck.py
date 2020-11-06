@@ -107,3 +107,18 @@ def getReturnInput():
             return read
         else:
             printer("Please type in a valid option!", "text")
+
+def processWords(words):
+    """
+    Process the raw input
+    """
+    wordList = []
+    for word in words:
+        temp = ""
+        if (word != ""):
+            for character in word:
+                if (character.isalpha()):
+                    temp += character.lower()
+            wordList.append(temp)
+    wordList = list(filter(None, wordList))
+    return wordList
