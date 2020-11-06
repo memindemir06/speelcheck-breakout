@@ -13,16 +13,16 @@ brcor = '\u255D'  # bottom right corner
 
 # FUNCTIONS
 
-# Clear line in terminal
+
 def clear():
-
-    # for windows
-    if os.name == 'nt':
-        _ = os.system('cls')
-
-    # for mac and linux(here, os.name is 'posix')
-    else:
-        _ = os.system('clear')
+    """
+    Clear lines in terminal
+    I am using it as it makes the output look nicer.
+    """
+    if os.name == 'nt':     # Windows
+        os.system('cls')
+    else:                   # OS X and Linux
+        os.system('clear')
 
 
 def printer(str, type):
