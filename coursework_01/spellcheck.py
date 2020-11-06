@@ -110,7 +110,6 @@ def addToDictionary(word):
     """
     with open("EnglishWords.txt", "a") as file:
         file.write(word + "\n")
-    print("ye")
 
 def processWords(words):
     """
@@ -139,6 +138,7 @@ def spellcheck(wordList):
     for word in wordList:
         suggestion = ("", 0)   # Current suggestion for incorrect word
         processedInput.append(word)
+        printer("Checking '" + word + "'...", "text")
         matchCheck = False
         with open("EnglishWords.txt") as file:
             for line in file:
