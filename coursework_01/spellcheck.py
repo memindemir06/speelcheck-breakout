@@ -49,18 +49,16 @@ def get1to4Input():
     """
     Get input when a word spelt incorrectly
     """
+    printer(" Ignore (1)", "text")
+    printer(" Mark (2)", "text")
+    printer(" Add to dictionary (3)", "text")
+    printer(" Show suggestion (4)", "text")
     while True:
-        printer(" Ignore (1)", "text")
-        printer(" Mark (2)", "text")
-        printer(" Add to dictionary (3)", "text")
-        printer(" Show suggestion (4)", "text")
         read = input(9*" " + vline + " >> ")
         if (read.isdigit()):
             read = int(read)
             if (read == 1 or read == 2 or read == 3 or read == 4):
                 return read
-        clear()
-        printer("", "title")
         printer("Please type in a valid option!", "text")
 
 
@@ -81,18 +79,16 @@ def get0to2Input():
     """
     Ask if the user ant to spellcheck a file or a sentence
     """
+    printer(" Spellcheck a sentence (1)", "text")
+    printer(" Spellcheck a file (2)", "text")
+    printer(" Exit (0)", "text")
+    printer("", "text")
     while True:
-        printer(" Spellcheck a sentence (1)", "text")
-        printer(" Spellcheck a file (2)", "text")
-        printer(" Exit (0)", "text")
-        printer("", "text")
         read = input(9*" " + vline + " >> ")
         if (read.isdigit()):
             read = int(read)
             if (read == 1 or read == 2 or read == 0):
                 return read
-        clear()
-        printer("", "title")
         printer("Please type in a valid option!", "text")
 
 
@@ -107,6 +103,14 @@ def getReturnInput():
             return read
         else:
             printer("Please type in a valid option!", "text")
+
+def addToDictionary(word):
+    """
+    Add the word to EnglishWords.txt
+    """
+    with open("EnglishWords.txt", "a") as file:
+        file.write(word + "\n")
+    print("ye")
 
 def processWords(words):
     """
@@ -151,7 +155,7 @@ def spellcheck(wordList):
                 else:
                     pass
         if (matchCheck == False):     # If the word is spelt incorrectly
-            printer(("You incorrectly spelled '" + word + "'"), "text")
+            printer(("'" + word + "' is spelt incorrectly."), "text")
             printer("Please select what you want to do with it:", "text")
             decision = get1to4Input()
             if (decision == 1):
@@ -204,7 +208,8 @@ def createFile(summaryList, processedInput, timediff):
     """
     Create the output file
     """
-    printer("The spellcheck is successfully completed.", "text")
+    printer("The spellcheck is successfully completed. An output file", "text")
+    printer(" with a summary and spellchecked input will be created.", "text")
     printer("What would you like the file name to be?", "text")
     filename = input(9*" " + vline + " >> ")
     if (filename.find(".") == -1):
@@ -235,3 +240,69 @@ def createFile(summaryList, processedInput, timediff):
             "\n|"+"END OF THE PROCESSED INPUT".center(80, "-") + "|\n")
     printer(("The output has created at '" + str(filename) + "'"), "text")
     printer("", "hline")
+
+# THE PROGRAM
+
+printer(" THE SPELLCHECKER ", "title")
+
+while True:
+    # This will store the processed input to be put in the output file
+    processedInput = []
+    words = []
+    printer("Please select one of the options:", "text")
+    option = get0to2Input()
+    if (option == 1):
+        printer("", "hline")
+        printer("Please type in your sentence:", "text")
+        sentence = input(
+            (9*" " + vline + " >> "))
+        beginning = time.perf_counter()
+        words = sentence.split()
+        wordList = processWords(words)
+        summaryList = spellcheck(wordList)
+        end = time.perf_counter()
+        createFile(summaryList, processedInput, end-beginning)
+        returnOption = getReturnInput()
+        if (returnOption == "r"):
+            clear()
+            printer(" MAIN MENU ", "title")
+            continue
+        elif (returnOption == "q"):
+            printer("", "bottom")
+            break
+        else:
+            pass
+    elif (option == 2):
+        printer("", "hline")
+        filename = fileCheck()
+        if (filename == False):
+            continue
+        else:
+            beginning = time.perf_counter()
+            with open(filename) as file:
+                for line in file:
+                    tempList = line.split(" ")
+                    for word in tempList:
+                        word = word.strip()
+                        words.append(word)
+            if (words == []):
+                break
+            wordList = processWords(words)
+            summaryList = spellcheck(wordList)
+            end = time.perf_counter()
+            createFile(summaryList, processedInput, end-beginning)
+            returnOption = getReturnInput()
+            if (returnOption == "r"):
+                clear()
+                printer(" MAIN MENU ", "title")
+                continue
+            elif (returnOption == "q"):
+                printer("", "bottom")
+                break
+            else:
+                pass
+    elif (option == 0):
+        printer("", "bottom")
+        break
+    else:
+        pass
