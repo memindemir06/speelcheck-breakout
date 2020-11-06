@@ -167,7 +167,7 @@ def spellcheck(wordList):
                     printer("No suggestion found.", "text")
                 else:
                     printer(
-                        ("Did you mean '" + suggestion[0] + "' instead of '" + word + "'"), "text")
+                        ("Did you mean '" + suggestion[0] + "' instead of '" + word + "'?"), "text")
                     answer = getYesNoInput()
                     if (answer == "y"):
                         processedInput[len(processedInput)-1] = suggestion[0]
@@ -178,3 +178,60 @@ def spellcheck(wordList):
                         pass
 
     return [numOfWords, correctCount, incorrectCount, addedToDictionaryCount, changedWordCount]
+
+def fileCheck():
+    """
+    Check whether a file exists or not until user gives up or the condition becomes true
+    """
+    while True:
+        printer("Please enter the file name or simply drag it here:", "text")
+        filename = input(9*" " + vline + " >> ")
+        if(os.path.isfile(filename)):
+            return filename
+        else:
+            printer("File not found! Do you want to try again?:", "text")
+            printer("Yes (y) or return to main menu (r)", "text")
+            option = input(9*" " + vline + " >> ")
+            if (option == "y"):
+                continue
+            elif (option == "r"):
+                clear()
+                printer(" MAIN MENU ", "title")
+                return False
+
+
+def createFile(summaryList, processedInput, timediff):
+    """
+    Create the output file
+    """
+    printer("The spellcheck is successfully completed.", "text")
+    printer("What would you like the file name to be?", "text")
+    filename = input(9*" " + vline + " >> ")
+    if (filename.find(".") == -1):
+        filename += ".txt"
+    with open(filename, "w") as file:
+        file.write(
+            "|"+"SUMMARY STATISTICS".center(80, "-") + "|\n\n")
+        file.write("The total number of words: %d\n" %
+                   summaryList[0])
+        file.write("The number of words spelt correctly: %d\n" %
+                   summaryList[1])
+        file.write("The number of words spelt incorrectly: %d\n" %
+                   summaryList[2])
+        file.write(
+            "The number of words added to the dictionary: %d\n" % summaryList[3])
+        file.write(
+            "The number of words changed by the user accepting the suggested word: %d\n" % summaryList[4])
+        file.write("The time and day input was spellchecked: " +
+                   str(datetime.now()))
+        file.write("\nThe amount of time elapsed (the time it took) to spellcheck the input: " +
+                   str(timediff) + " seconds\n")
+        file.write(
+            "\n|"+"END OF THE SUMMARY".center(80, "-") + "|\n")
+        file.write(
+            "\n\n" + "|"+"PROCESSED INPUT".center(80, "-") + "|\n\n")
+        file.write("\n".join(processedInput) + "\n")
+        file.write(
+            "\n|"+"END OF THE PROCESSED INPUT".center(80, "-") + "|\n")
+    printer(("The output has created at '" + str(filename) + "'"), "text")
+    printer("", "hline")
