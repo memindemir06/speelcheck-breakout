@@ -2,6 +2,8 @@ from tkinter import *
 import time
 import random
 import json
+from itertools import repeat
+import math
 
 
 class Game:
@@ -19,6 +21,7 @@ class Game:
                              height=800, bd=0, highlightthickness=0)
         self.window.bind('<KeyPress-p>', self.pauseGame)
         self.bricks = []
+        self.bricksCheck = []
         if self.level == 1 and self.score == 0:
             self.saved = False
         else:
@@ -29,26 +32,34 @@ class Game:
         usernameText = "Player: " + self.username
         levelText = "Level: " + str(self.level)
         scoreText = "Score: " + str(self.score)
-        self.canvas.create_text(20, 20, fill="white",
-                                font="Roboto 16 bold", anchor=W, text=usernameText)
-        self.canvas.create_text(480, 40, fill="white",
-                                font="Roboto 16 bold", anchor=E, text=levelText)
-        self.canvas.create_text(480, 20, fill="white",
-                                font="Roboto 16 bold", anchor=E, text=scoreText)
+        self.usernameObj = self.canvas.create_text(20, 20, fill="white",
+                                                   font="Roboto 16 bold", anchor=W, text=usernameText)
+        self.levelObj = self.canvas.create_text(480, 40, fill="white",
+                                                font="Roboto 16 bold", anchor=E, text=levelText)
+        self.scoreObj = self.canvas.create_text(480, 20, fill="white",
+                                                font="Roboto 16 bold", anchor=E, text=scoreText)
         self.paddle = Paddle(self.canvas, "#FFDF00")
         self.ball = Ball(self.window, self,  self.canvas,
                          self.paddle, self.bricks, "#FFDF00")
-        # self.displayBricks()
+        self.displayBricks()
         self.paddle.move_active()
         self.ball.move_active()
 
-    # def displayBricks(self):
-    #     if level == 1:
-    #         pass
-    #     elif level == 2:
-    #         pass
-    #     elif level == 3:
-    #         pass
+    def displayBricks(self):
+        if self.level == 1:
+            for row in range(2, 16):
+                for column in range(8, 17):
+                    if row == 6 or row == 11:
+                        break
+                    color = "%06x" % random.randint(0, 0xFFFFFF)
+                    brick = Brick(self.canvas, '#'+color,
+                                  row*28, column*18)
+                    brick.display()
+                    self.bricks.append(brick)
+        elif self.level == 2:
+            pass
+        elif self.level == 3:
+            pass
 
     def pauseGame(self, event):
         """
@@ -84,6 +95,24 @@ class Game:
             temp.append(profile)
         with open("savedgames.json", "w") as file:
             json.dump(data, file)
+
+    def win(self):
+        if self.level < 3:
+            game = Game(self.window, self.username, self.level+1, self.score)
+            game.display()
+        else:
+            winMessage = Label(
+                window, text="You won!",
+                fg="white", bg="#250826", bd=0, width=40, font="Roboto 24 bold")
+            winMessage.place(relx=0.5, rely=0.4, anchor=CENTER)
+
+    def updateInfo(self):
+        usernameText = "Player: " + self.username
+        levelText = "Level: " + str(self.level)
+        scoreText = "Score: " + str(self.score)
+        self.canvas.itemconfigure(self.usernameObj, text=usernameText)
+        self.canvas.itemconfigure(self.levelObj, text=levelText)
+        self.canvas.itemconfigure(self.scoreObj, text=scoreText)
 
 
 class SavedGames:
@@ -126,7 +155,7 @@ class SavedGames:
     def _loadgame(self, count):
         gameindex = self.scores['userProfiles'][count]
         game = Game(self.window, gameindex['name'],
-                    gameindex['level'], gameindex['score'])
+                    gameindex['level'], 0)
         game.saved = True
         game.setIndex(count)
         game.display()
@@ -162,8 +191,8 @@ class Leaderboard:
 
     def display(self):
         self.returnMenu.place(relx=0.5, rely=0.1, anchor=CENTER)
-        self.labelName.place(relx=0.3, rely=0.2, anchor=CENTER)
-        self.labelScore.place(relx=0.7, rely=0.2, anchor=CENTER)
+        self.labelName.place(relx=0.32, rely=0.2, anchor=CENTER)
+        self.labelScore.place(relx=0.65, rely=0.2, anchor=CENTER)
         self.hline.place(relx=0.2, rely=0.25, width=300, anchor=W)
         self.scores['userProfiles'].sort(reverse=True, key=self.myFunc)
         i = 0.3
@@ -172,8 +201,8 @@ class Leaderboard:
                            bg="#022120", bd=0, width=20, font="Roboto 16")
             label2 = Label(window, text=item['score'], fg="white",
                            bg="#022120", bd=0, width=20, font="Roboto 16")
-            label1.place(relx=0.3, rely=i, anchor=CENTER)
-            label2.place(relx=0.7, rely=i, anchor=CENTER)
+            label1.place(relx=0.32, rely=i, anchor=CENTER)
+            label2.place(relx=0.65, rely=i, anchor=CENTER)
             i += 0.05
 
     def myFunc(self, e):
@@ -189,11 +218,43 @@ class Settings:
     Settings page.
     """
 
-    def __init__(self, window, game):
+    def __init__(self, window):
+        self.window = window
+        clearWindow(window)
+        window.config(bg="#022120")
+        self.title = Label(window, text="Controls", fg="white",
+                           bg="#022120", bd=0, width=20, font="Roboto 16 bold")
+        self.hline = LabelFrame(window, bg="white")
+        self.labelPaddle = Label(window, text="Paddle Movement: ", fg="white",
+                                 bg="#022120", bd=0, width=20, font="Roboto 12")
+
+        self.checkPaddle1 = Checkbutton(window, text="A-S", fg="white", command=self._checkpaddle,
+                                        bg="#022120", bd=0, width=20, font="Roboto 8", cursor="hand2", relief=FLAT, variable=IntVar())
+        self.checkPaddle2 = Checkbutton(window, text="Left-Right Arrow", fg="white", command=self._checkpaddle,
+                                        bg="#022120", bd=0, width=20, font="Roboto 8", cursor="hand2", relief=FLAT, variable=IntVar())
+        self.returnMenu = Button(window, text="Main Menu", fg="#022120", command=self._returnmenu,
+                                 bg="white", bd=0, width=20, font="Roboto 16 bold", highlightcolor="#FAFAFA",
+                                 activebackground="#FAFAFA", cursor="hand2")
+
+    def display(self):
+        self.title.place(relx=0.5, rely=0.1, anchor=CENTER)
+        self.hline.place(relx=0.2, rely=0.15, width=300, anchor=W)
+        self.labelPaddle.place(relx=0.25, rely=0.25, anchor=CENTER)
+        self.checkPaddle1.place(relx=0.55, rely=0.25, anchor=CENTER)
+        self.checkPaddle2.place(relx=0.85, rely=0.25, anchor=CENTER)
+
+    def _checkpaddle(self):
         """
-        docstring
+        Determine the user prefence to move the paddle
         """
-        pass
+        if self.checkPaddle1['variable'] == 1:
+            self.checkPaddle2.deselect()
+        else:
+            self.checkPaddle1.deselect()
+
+    def _returnmenu(self):
+        main = MainMenu(window)
+        main.display()
 
 
 class Pause:
@@ -247,7 +308,9 @@ class Pause:
         name = self.game.username
         score = self.game.score
         level = self.game.level
-        profile = {"name": name, "level": level, "score": score}
+        bricksCheck = self.game.bricksCheck
+        profile = {"name": name, "level": level,
+                   "score": score, "bricks": bricksCheck}
         with open("savedgames.json", "r") as file:
             data = json.load(file)
             temp = data['userProfiles']
@@ -328,8 +391,8 @@ class MainMenu:
         """
         Settings
         """
-        # settingsObject = Settings(self.window)
-        # settingsObject.display()
+        settingsObject = Settings(self.window)
+        settingsObject.display()
         pass
 
 
@@ -418,6 +481,14 @@ class Ball:
             return True
         return False
 
+    def hit_brick(self, pos, brick_pos):
+        """
+        Collision check between the ball and a brick
+        """
+        if (pos[0] < brick_pos[2] and pos[2] > brick_pos[0] and pos[1] < brick_pos[3] and pos[3] > brick_pos[1]):
+            return True
+        return False
+
     def draw(self):
         """
         Render the ball
@@ -445,6 +516,49 @@ class Ball:
             self.y = -self.y
             random.shuffle(self.start_direction)
             self.x = self.start_direction[2]
+        if not self.game.bricks:
+            self.game.win()
+        for i in range(len(self.game.bricks)):
+            if self.hit_brick(pos, [self.game.bricks[i].x, self.game.bricks[i].y, self.game.bricks[i].x+25, self.game.bricks[i].y+15]) == True:
+
+                ballHalfW = (pos[2]-pos[0])/2
+                ballHalfH = (pos[3]-pos[1])/2
+                brickHalfW = 12.5
+                brickHalfH = 7.5
+                ballCenterX = pos[0] + (pos[2]-pos[0])/2
+                ballCenterY = pos[1] + (pos[3]-pos[1])/2
+                brickCenterX = self.game.bricks[i].x + 12.5
+                brickCenterY = self.game.bricks[i].y + 7.5
+
+                # Difference between centers
+                diffX = ballCenterX - brickCenterX
+                diffY = ballCenterY - brickCenterY
+
+                # Minimum distance to separate along X and Y
+                minXDist = ballHalfW + brickHalfW
+                minYDist = ballHalfH + brickHalfH
+
+                # Depth of the collision for both axis
+                depthX = (minXDist - diffX) if diffX > 0 else (-minXDist - diffX)
+                depthY = (minYDist - diffY) if diffY > 0 else (-minYDist - diffY)
+
+                # Decide which side from the collision happened
+
+                if (depthX != 0 and depthY != 0):
+                    if (abs(depthX) < abs(depthY)):
+                        self.x = -self.x
+                        self.game.bricks[i].delete()
+                        self.game.bricks.pop(i)
+                        self.game.score += 50
+                        self.game.updateInfo()
+                        break
+                    else:
+                        self.y = -self.y
+                        self.game.bricks[i].delete()
+                        self.game.bricks.pop(i)
+                        self.game.score += 50
+                        self.game.updateInfo()
+                        break
 
     def move_active(self):
         if self.active == True:
@@ -459,8 +573,16 @@ class Brick:
 
     def __init__(self, canvas, color, x, y):
         self.canvas = canvas
-        self.id = canvas.create_rectangle(x, y, x+10, y+5, fill=color)
-        self.broken = False
+        self.color = color
+        self.x = x
+        self.y = y
+
+    def display(self):
+        self.id = self.canvas.create_rectangle(
+            self.x, self.y, self.x+25, self.y+15, fill=self.color)
+
+    def delete(self):
+        self.canvas.delete(self.id)
 
 
 def createWindow(w, h):
