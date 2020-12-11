@@ -1,3 +1,10 @@
+# The famous Breakout game!
+# Controls:
+#       paddle: arrowkeys |  'a','s'
+#       pause game: 'p' | ESC
+#       boss Key: 'b'
+# Screen dimensions: W: 500  H: 800 Fixed
+
 from tkinter import *
 import time
 import random
@@ -8,7 +15,7 @@ import math
 
 class Game:
     """
-    Render the game screen and call necessary methods
+    Render the game screen and call necessary methods.
     """
 
     def __init__(self, window, username, level, score):
@@ -22,7 +29,7 @@ class Game:
         self.window.bind_all('<KeyPress-p>', self.pauseGame)
         self.window.bind_all('<KeyPress-Escape>', self.pauseGame)
         self.bricks = []
-        self.bricksCheck = []
+        # Check if it is a new game or not.
         if self.level == 1 and self.score == 0:
             self.saved = False
         else:
@@ -45,6 +52,7 @@ class Game:
         self.displayBricks()
         self.paddle.move_active()
         self.ball.move_active()
+    # Brick designs from different levels
 
     def displayBricks(self):
         if self.level == 1:
@@ -90,6 +98,7 @@ class Game:
                     brick.display()
                     self.bricks.append(brick)
                     j += 1
+    # Instance of Pause class, the logic is in there
 
     def pauseGame(self, event):
         """
@@ -97,6 +106,7 @@ class Game:
         """
         pause = Pause(window, self)
         pause.display()
+    # File write the surname score and current level.
 
     def saveGame(self):
         profile = {"name": self.username,
@@ -111,6 +121,8 @@ class Game:
 
     def setIndex(self, count):
         self.count = count
+    # To prevent saving the same game all the time override
+    #  the previous save if it is not a new start.
 
     def override(self):
         profile = {"name": self.username,
@@ -125,6 +137,7 @@ class Game:
             temp.append(profile)
         with open("savedgames.json", "w") as file:
             json.dump(data, file)
+    # Direct transition between levels.
 
     def win(self):
         if self.level < 3:
@@ -135,6 +148,7 @@ class Game:
                 window, text="You won!",
                 fg="white", bg="#250826", bd=0, width=40, font="Roboto 24 bold")
             winMessage.place(relx=0.5, rely=0.4, anchor=CENTER)
+    # Update the game screen when score etc. changes.
 
     def updateInfo(self):
         usernameText = "Player: " + self.username
@@ -147,7 +161,7 @@ class Game:
 
 class SavedGames:
     """
-    SavedGames page.
+    Saved games page.
     """
 
     def __init__(self, window):
@@ -181,6 +195,7 @@ class SavedGames:
             button.place(relx=0.5, rely=columnCount, anchor=CENTER)
             columnCount += 0.08
             count -= 1
+    # Load the chosen game clicked by the button
 
     def _loadgame(self, count):
         gameindex = self.scores['userProfiles'][count]
@@ -224,6 +239,7 @@ class Leaderboard:
         self.labelName.place(relx=0.3, rely=0.2, anchor=CENTER)
         self.labelScore.place(relx=0.7, rely=0.2, anchor=CENTER)
         self.hline.place(relx=0.2, rely=0.25, width=300, anchor=W)
+        # Read-Sort-Display the profile list
         self.scores['userProfiles'].sort(reverse=True, key=self.myFunc)
         i = 0.3
         for item in self.scores['userProfiles']:
@@ -275,6 +291,8 @@ class Settings:
         self.checkPaddle2.place(relx=0.85, rely=0.25, anchor=CENTER)
         self.returnMenu.place(relx=0.5, rely=0.85, anchor=CENTER)
 
+    # Only one of the checkboxes should be selected in order to
+    # control the paddle
     def _checkpaddle(self):
         """
         Determine the user prefence to move the paddle
@@ -326,12 +344,14 @@ class Pause:
         self.cheatLabelBottom.place(relx=0.5, rely=0.48, anchor=CENTER)
         self.continueGame.place(relx=0.5, rely=0.53, anchor=CENTER)
         self.saveGame.place(relx=0.5, rely=0.58, anchor=CENTER)
+    # Get the cheatcode and apply to the paddle
 
     def getCheatCode(self, event):
         cheatCode = self.cheatEntry.get()
         global paddleW
         if cheatCode == "ENLARGE" and paddleW < 200:
             paddleW *= 1.2
+    # Destroy widgets used by the pause page and contine to the game.
 
     def _continuegame(self):
         self.cheatLabelTop.destroy()
@@ -343,6 +363,7 @@ class Pause:
         self.game.paddle.active = True
         self.game.ball.move_active()
         self.game.paddle.move_active()
+    # Can save without finishing the game
 
     def _savegame(self):
         name = self.game.username
@@ -363,7 +384,7 @@ class Pause:
 
 
 class MainMenu:
-
+    # A menu page. Gateaway to other functionalities of the program.
     def __init__(self, window):
         self.window = window
         clearWindow(window)
@@ -465,9 +486,6 @@ class Paddle:
         self.active = True
 
     def draw(self):
-        """
-        docstring
-        """
         self.canvas.move(self.id, self.x, 0)
         pos = self.canvas.coords(self.id)
         if(pos[0] < 0 or pos[2] > 500):
